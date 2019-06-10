@@ -40,94 +40,6 @@ function createTables() {
   });
 }
 
-module.exports = {
-  DB: db,
-  getdbready: function() {
-    return dbReady;
-  },
-  printInfo: function(db) {
-    let command = "SELECT * FROM User";
-    db.all(command, [], (err, rows) => {
-      if (err) {
-        console.log(err);
-      } else {
-        rows.forEach(row => {
-          console.log(row);
-        });
-      }
-    });
-  },
-  /*
-  insertNewMessagesInDatabase: function(messagesMap) {
-    let command = db.prepare(
-      "INSERT INTO Message(message, username, messagedate) VALUES(?,?,?);"
-    );
-    for (const key of messagesMap.keys()) {
-      usermessages = messagesMap.get(key);
-      username = key;
-      usermessages.forEach(messageObject => {
-        command.run(messageObject.message, username, messageObject.date);
-      });
-    }
-    command.finalize(() => {
-      console.log("Chat backup to database finished");
-      //I'm not sure if this is necessary. C habits
-      messagesMap.clear();
-    });
-  },
-*/
-  insertSpamDetailsInDatabase: function(spamDetails) {
-    let command =
-      "SELECT EXISTS (SELECT 1 FROM User WHERE username='" +
-      spamDetails.user +
-      "') AS E;";
-    db.all(command, [], (err, rows) => {
-      let userexists = 0;
-      if (err) {
-        console.log(err);
-      } else {
-        rows.forEach(row => {
-          userexists = row.E;
-        });
-        if (!userexists) {
-          insertUserInDatabase(spamDetails);
-        } else {
-          insertSpamRowInDatabase(spamDetails);
-        }
-      }
-    });
-  }
-};
-
-function getUserIdFromDatabase(user) {
-  let command =
-    "SELECT username FROM User WHERE username='" + user + "') AS U;";
-  db.all(command, [], (err, rows) => {
-    if (err) {
-      console.log(err);
-    } else {
-      let userId = -1;
-      rows.forEach(row => {
-        userId = row.U;
-        console.log(userId);
-      });
-    }
-  });
-}
-
-function insertSpamMessagesInDatabase(userId, spamId, messages) {
-  console.log(messages);
-  return;
-  let messagesCommand = db.prepare(
-    "INSERT INTO Message(spamId, messageText, messagedate) VALUES(?,?,?);"
-  );
-  usermessages = spamDetails.messages;
-  for (messageObject of usermessages) {
-    messagesCommand.run(spamId, messageObject.message, messageObject.date);
-  }
-  console.log(spamId + " " + userId);
-}
-
 function insertSpamRowInDatabase(spamDetails, userId = -1) {
   db.serialize(() => {
     if (userId === -1) {
@@ -181,3 +93,78 @@ function insertUserInDatabase(spamDetails) {
     }
   );
 }
+
+//TODO finish this
+function insertSpamMessagesInDatabase(userId, spamId, messages) {
+  console.log(messages);
+  return;
+  let messagesCommand = db.prepare(
+    "INSERT INTO Message(spamId, messageText, messagedate) VALUES(?,?,?);"
+  );
+  usermessages = spamDetails.messages;
+  for (messageObject of usermessages) {
+    messagesCommand.run(spamId, messageObject.message, messageObject.date);
+  }
+  console.log(spamId + " " + userId);
+}
+
+module.exports = {
+  DB: db,
+  getdbready: function() {
+    return dbReady;
+  },
+  printInfo: function(db) {
+    let command = "SELECT * FROM User";
+    db.all(command, [], (err, rows) => {
+      if (err) {
+        console.log(err);
+      } else {
+        rows.forEach(row => {
+          console.log(row);
+        });
+      }
+    });
+  },
+
+  insertSpamDetailsInDatabase: function(spamDetails) {
+    let command =
+      "SELECT EXISTS (SELECT 1 FROM User WHERE username='" +
+      spamDetails.user +
+      "') AS E;";
+    db.all(command, [], (err, rows) => {
+      let userexists = 0;
+      if (err) {
+        console.log(err);
+      } else {
+        rows.forEach(row => {
+          userexists = row.E;
+        });
+        if (!userexists) {
+          insertUserInDatabase(spamDetails);
+        } else {
+          insertSpamRowInDatabase(spamDetails);
+        }
+      }
+    });
+  }
+};
+
+/*
+  insertNewMessagesInDatabase: function(messagesMap) {
+    let command = db.prepare(
+      "INSERT INTO Message(message, username, messagedate) VALUES(?,?,?);"
+    );
+    for (const key of messagesMap.keys()) {
+      usermessages = messagesMap.get(key);
+      username = key;
+      usermessages.forEach(messageObject => {
+        command.run(messageObject.message, username, messageObject.date);
+      });
+    }
+    command.finalize(() => {
+      console.log("Chat backup to database finished");
+      //I'm not sure if this is necessary. C habits
+      messagesMap.clear();
+    });
+  },
+*/
