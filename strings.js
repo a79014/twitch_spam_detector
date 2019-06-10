@@ -1,6 +1,6 @@
 module.exports = {
-  username: "",
+  username: "ohnosneks",
   //use an oauth token
-  password: "oauth:",
-  streamChannel: ""
+  password: "oauth:ii9fafgk2mnznbgn7pmubgzgyh4rxa",
+  streamChannel: "xqcow"
 };

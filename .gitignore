@@ -1,0 +1,6 @@
+node_modules
+nogit
+*.db
+strings.js
+package-lock.json
+.vscode

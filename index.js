@@ -50,6 +50,7 @@ function detectSpam(user) {
     }
     if (weirdChampTimes > 5) {
       console.log(user + " is a WeirdChamp spammer");
+      console.log(messagesFromlastMinute);
     }
   });
 
