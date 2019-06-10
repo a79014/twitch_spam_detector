@@ -1,0 +1,16 @@
+{
+  "name": "twitch-bot",
+  "version": "1.0.0",
+  "description": "twitch comment analyzer bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "sqlite3": "^4.0.8",
+    "tmi": "^2.0.0",
+    "tmi.js": "^1.4.2"
+  }
+}
