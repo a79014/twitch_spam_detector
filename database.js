@@ -61,12 +61,12 @@ function insertSpamRowInDatabase(spamDetails, userId = -1) {
               function(err) {
                 if (!err) {
                   db.serialize(() => {
-                    //(userId, spamId)
+                    //lastID here is the spamID
                     insertSpamMessagesInDatabase(
-                      userId,
                       this.lastID,
                       spamDetails.messages
                     );
+                    module.exports.printInfo(db);
                   });
                 } else {
                   console.log(err);
@@ -94,18 +94,13 @@ function insertUserInDatabase(spamDetails) {
   );
 }
 
-//TODO finish this
-function insertSpamMessagesInDatabase(userId, spamId, messages) {
-  console.log(messages);
-  return;
+function insertSpamMessagesInDatabase(spamId, messages) {
   let messagesCommand = db.prepare(
     "INSERT INTO Message(spamId, messageText, messagedate) VALUES(?,?,?);"
   );
-  usermessages = spamDetails.messages;
-  for (messageObject of usermessages) {
+  for (messageObject of messages) {
     messagesCommand.run(spamId, messageObject.message, messageObject.date);
   }
-  console.log(spamId + " " + userId);
 }
 
 module.exports = {
@@ -114,7 +109,7 @@ module.exports = {
     return dbReady;
   },
   printInfo: function(db) {
-    let command = "SELECT * FROM User";
+    let command = "SELECT * FROM Message";
     db.all(command, [], (err, rows) => {
       if (err) {
         console.log(err);

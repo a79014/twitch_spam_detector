@@ -50,7 +50,6 @@ function detectSpam(user) {
     }
     if (weirdChampTimes > 5) {
       console.log(user + " is a WeirdChamp spammer");
-      console.log(messagesFromlastMinute);
     }
   });
 
@@ -89,18 +88,35 @@ client.on("chat", (channel, user, message, self) => {
   }
 });
 
+//clears the map every N milliseconds, to prevent using too much system memory
+//drawback: cutting off a spam streak
+//TODO clean messages that aren't the most recent
+//(maybe older than the last 60?)
+function cleanupService(timeoutSeconds) {
+  if (database.getdbready()) {
+    setTimeout(() => {
+      oldMessagesMap = new Map(messagesMap);
+      messagesMap.clear();
+      for (var key of oldMessagesMap.keys()) {
+        detectSpam(key);
+      }
+      cleanupService();
+    }, timeoutSeconds * 1000);
+  }
+}
+
 // I disabled the backup service because it isn't intended
 // for this program to keep all messages in permanent storage.
 main();
 function main() {
   //backupService();
+  cleanupService(600);
   client.connect();
 }
 
 //things I don't use
 
-//
-
+//this used to store the messages in a database every N milliseconds
 function backupService() {
   if (database.getdbready()) {
     //database.printInfo(db);
