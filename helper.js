@@ -61,5 +61,15 @@ module.exports = {
     return (
       (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength)
     );
+  },
+  spamDetails: function(user, messages, spamDate) {
+    this.spamDate = spamDate;
+    this.messages = messages;
+    this.user = user;
+  },
+  message: function(text, date, scanned = false) {
+    this.text = text;
+    this.date = date;
+    this.scanned = scanned;
   }
 };

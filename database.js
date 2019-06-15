@@ -40,43 +40,41 @@ function createTables() {
   });
 }
 
-function insertSpamRowInDatabase(spamDetails, userId = -1) {
+function insertSpamMessagesInDatabase(spamId, messages) {
+  let messagesCommand = db.prepare(
+    "INSERT INTO Message(spamId, messageText, messagedate) VALUES(?,?,?);"
+  );
+  for (messageObject of messages) {
+    messagesCommand.run(spamId, messageObject.text, messageObject.date);
+  }
+  messagesCommand.finalize(() => {
+    console.log(messages);
+  });
+}
+
+function insertSpamRowInDatabase(spamDetails) {
   db.serialize(() => {
-    if (userId === -1) {
-      let command =
-        "SELECT userId FROM User WHERE username='" + spamDetails.user + "';";
-      db.all(command, [], (err, rows) => {
-        if (err) {
-          console.log(err);
-        } else {
-          let userId = rows[0].userId;
-          db.serialize(() => {
-            db.run(
-              "INSERT INTO Spam(userId, spamDate) VALUES(" +
-                userId +
-                "," +
-                "'" +
-                spamDetails.spamDate +
-                "');",
-              function(err) {
-                if (!err) {
-                  db.serialize(() => {
-                    //lastID here is the spamID
-                    insertSpamMessagesInDatabase(
-                      this.lastID,
-                      spamDetails.messages
-                    );
-                    module.exports.printInfo(db);
-                  });
-                } else {
-                  console.log(err);
-                }
-              }
-            );
-          });
-        }
-      });
-    }
+    let command =
+      "SELECT userId FROM User WHERE username='" + spamDetails.user + "';";
+    db.all(command, [], function(err, rows) {
+      if (err) {
+        console.log(err);
+      } else {
+        let userId = rows[0].userId;
+        command = `INSERT INTO Spam(userId, spamDate) 
+        VALUES(
+          '${userId}', 
+          '${spamDetails.spamDate}'
+        )`;
+        db.run(command, function(err) {
+          if (!err) {
+            insertSpamMessagesInDatabase(this.lastID, spamDetails.messages);
+          } else {
+            console.log(err);
+          }
+        });
+      }
+    });
   });
 }
 
@@ -86,21 +84,12 @@ function insertUserInDatabase(spamDetails) {
     function(err) {
       if (!err) {
         console.log("inserted new user with Id: " + this.lastID);
-        insertSpamRowInDatabase(spamDetails, this.lastID);
+        insertSpamRowInDatabase(spamDetails);
       } else {
         console.log(err);
       }
     }
   );
-}
-
-function insertSpamMessagesInDatabase(spamId, messages) {
-  let messagesCommand = db.prepare(
-    "INSERT INTO Message(spamId, messageText, messagedate) VALUES(?,?,?);"
-  );
-  for (messageObject of messages) {
-    messagesCommand.run(spamId, messageObject.message, messageObject.date);
-  }
 }
 
 module.exports = {
@@ -143,23 +132,3 @@ module.exports = {
     });
   }
 };
-
-/*
-  insertNewMessagesInDatabase: function(messagesMap) {
-    let command = db.prepare(
-      "INSERT INTO Message(message, username, messagedate) VALUES(?,?,?);"
-    );
-    for (const key of messagesMap.keys()) {
-      usermessages = messagesMap.get(key);
-      username = key;
-      usermessages.forEach(messageObject => {
-        command.run(messageObject.message, username, messageObject.date);
-      });
-    }
-    command.finalize(() => {
-      console.log("Chat backup to database finished");
-      //I'm not sure if this is necessary. C habits
-      messagesMap.clear();
-    });
-  },
-*/

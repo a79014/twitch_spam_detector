@@ -36,48 +36,36 @@ function detectSpam(user) {
       !messageObject.weirdChampScanned
   );
   let weirdChampTimes = 0;
-
+  const maxWeirdChamp = 5;
   //messages containing "WeirdChamp" in quotes aren't considered
   //because it's usually someone complaining about WeirdChamp spammers
   messagesFromlastMinute.forEach(messageObject => {
     if (!messageObject.weirdChampScanned) {
       if (
-        messageObject.message.includes("WeirdChamp") &&
-        !messageObject.message.includes('"WeirdChamp"')
+        messageObject.text.includes("WeirdChamp") &&
+        !messageObject.text.includes('"WeirdChamp"')
       ) {
         weirdChampTimes++;
       }
     }
-    if (weirdChampTimes > 5) {
+    if (weirdChampTimes > maxWeirdChamp) {
       console.log(user + " is a WeirdChamp spammer");
     }
   });
 
   //every time a WeirdChamp was detected, flags those messages as "scanned"
   //to prevent them counting twice for the same streak
-  if (weirdChampTimes > 5) {
-    let spamDetails = {
-      spamDate: null,
-      messages: null,
-      user: null
-    };
-    messagesFromlastMinute.forEach(messageObject => {
-      messageObject.weirdChampScanned = true;
-    });
-    spamDetails.spamDate = helper.getDateTime();
-    spamDetails.messages = messagesFromlastMinute;
-    spamDetails.user = user;
-    database.insertSpamDetailsInDatabase(spamDetails);
+  if (weirdChampTimes > maxWeirdChamp) {
+    messagesFromlastMinute.map(msgObj => (msgObj.scanned = true));
+    database.insertSpamDetailsInDatabase(
+      new helper.spamDetails(user, messagesFromlastMinute, helper.getDateTime())
+    );
   }
 }
 
 client.on("chat", (channel, user, message, self) => {
   if (channel === "#" + streamChannel) {
-    const msg = {
-      message: message,
-      date: helper.getDateTime(),
-      weirdChampScanned: false
-    };
+    const msg = new helper.message(message, helper.getDateTime()); //mudar de true para false ou deixar em branco (ver se deixar em branco funciona)
     if (!messagesMap.has(user.username)) {
       const userMessages = [msg];
       messagesMap.set(user.username, userMessages);
@@ -89,8 +77,8 @@ client.on("chat", (channel, user, message, self) => {
 });
 
 //clears the map every N milliseconds, to prevent using too much system memory
-//drawback: cutting off a spam streak
-//TODO clean messages that aren't the most recent
+//drawback: cutting off a spam streak by clearing user's messages
+//TODO clean only messages that aren't the most recent
 //(maybe older than the last 60?)
 function cleanupService(timeoutSeconds) {
   if (database.getdbready()) {
@@ -112,21 +100,4 @@ function main() {
   //backupService();
   cleanupService(600);
   client.connect();
-}
-
-//things I don't use
-
-//this used to store the messages in a database every N milliseconds
-function backupService() {
-  if (database.getdbready()) {
-    //database.printInfo(db);
-  }
-  setTimeout(() => {
-    //this clears the messagesMap to receive new messages,
-    //while the DB gets inserted the old messages on old_messagesMap
-    //let old_messagesMap = new Map(messagesMap);
-    //messagesMap.clear();
-    //database.insertNewMessagesInDatabase(old_messagesMap);
-    backupService();
-  }, 5000);
 }
